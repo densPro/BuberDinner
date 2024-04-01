@@ -1,8 +1,7 @@
-namespace BuberDinner.Application.Services
+namespace BuberDinner.Application.Services;
+
+public interface IAuthenticationService
 {
-    public interface IAuthenticationService
-    {
-        AuthenticationResult Register(string firsName, string lastName, string email, string password);
-        AuthenticationResult Login(string email, string password);
-    }
+  AuthenticationResult Register(string firsName, string lastName, string email, string password);
+  AuthenticationResult Login(string email, string password);
 }

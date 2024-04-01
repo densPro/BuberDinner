@@ -3,14 +3,13 @@
 using BuberDinner.Application.Services;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace BuberDinner.Application
+namespace BuberDinner.Application;
+
+public static class DependencyInjection
 {
-    public static class DependencyInjection
-    {
-        public static IServiceCollection AddApplication(this IServiceCollection services)
-        {
-            services.AddScoped<IAuthenticationService, AuthenticationServices>();
-            return services;
-        }
-    }
+  public static IServiceCollection AddApplication(this IServiceCollection services)
+  {
+    services.AddScoped<IAuthenticationService, AuthenticationServices>();
+    return services;
+  }
 }
