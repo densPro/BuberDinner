@@ -1,15 +1,6 @@
-using BuberDinner.Application.Common.Interfaces.Authentication;
-
 namespace BuberDinner.Application.Services;
-
 public class AuthenticationServices : IAuthenticationService
 {
-  private readonly IJwtTokenGenerator _jwtTokenGenerator;
-
-  public AuthenticationServices(IJwtTokenGenerator jwtTokenGenerator)
-  {
-    _jwtTokenGenerator = jwtTokenGenerator;
-  }
 
   public AuthenticationResult Register(string firsName, string lastName, string email, string password)
   {
