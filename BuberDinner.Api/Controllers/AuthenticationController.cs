@@ -1,15 +1,14 @@
-using BuberDinner.Application.Common.Errors;
 using BuberDinner.Application.Services;
 using BuberDinner.Contract.Authentication;
-using FluentResults;
+using BuberDinner.Domain.Common.Errors;
+using ErrorOr;
 using Microsoft.AspNetCore.Mvc;
 
 
 namespace BuberDinner.Api.Controllers;
-
-[Route("auth")]
 [ApiController]
-public class AuthenticationController : ControllerBase
+[Route("auth")]
+public class AuthenticationController : ApiController
 {
   private readonly IAuthenticationService _authenticationService;
 
@@ -21,51 +20,44 @@ public class AuthenticationController : ControllerBase
   [HttpPost("register")]
   public IActionResult Register(RegisterRequest request)
   {
-    Result<AuthenticationResult> registerResult = _authenticationService.Register(
+    ErrorOr<AuthenticationResult> authResult = _authenticationService.Register(
         request.FirstName,
         request.LastName,
         request.Email,
         request.Password);
 
-    if (registerResult.IsSuccess)
-    {
-      return Ok(MapAuthResult(registerResult.Value));
-    }
-
-    var firsError = registerResult.Errors[0];
-
-    if (firsError is DuplicateEmailError)
-    {
-      return Problem(statusCode: StatusCodes.Status409Conflict, detail: firsError.Message);
-    }
-
-    return Problem();
+    return authResult.Match(
+     authResult => Ok(MapAuthResult(authResult)),
+     errors => Problem(errors)
+    );
   }
 
-    private static AuthenticationResponse MapAuthResult(AuthenticationResult authResult)
-    {
-        return new AuthenticationResponse(
-            authResult.User.Id,
-            authResult.User.FirstName,
-            authResult.User.LastName,
-            authResult.User.Email,
-            authResult.Token);
-    }
+  private static AuthenticationResponse MapAuthResult(AuthenticationResult authResult)
+  {
+    return new AuthenticationResponse(
+        authResult.User.Id,
+        authResult.User.FirstName,
+        authResult.User.LastName,
+        authResult.User.Email,
+        authResult.Token);
+  }
 
-    [HttpPost("login")]
+  [HttpPost("login")]
   public IActionResult Login(LoginRequest request)
   {
     var authResult = _authenticationService.Login(
         request.Email,
         request.Password);
 
-    var response = new AuthenticationResponse(
-        authResult.User.Id,
-        authResult.User.FirstName,
-        authResult.User.LastName,
-        authResult.User.Email,
-        authResult.Token);
-
-    return Ok(response);
+    if (authResult.IsError && authResult.FirstError == Errors.Authentication.InvalidCredentials)
+    {
+      return Problem(
+         statusCode: StatusCodes.Status401Unauthorized,
+         title: authResult.FirstError.Description);
+    }
+    return authResult.Match(
+      authResult => Ok(MapAuthResult(authResult)), 
+      errors => Problem(errors)
+    );
   }
 }
